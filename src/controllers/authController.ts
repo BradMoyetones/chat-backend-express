@@ -1,0 +1,100 @@
+import { Request, Response, NextFunction } from 'express'
+import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcrypt'
+import { signAccessToken, signRefreshToken, verifyAccessToken } from '../utils/jwt'
+import { z } from 'zod'
+
+const prisma = new PrismaClient()
+
+const loginSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(6),
+})
+
+const me = async (req: Request, res: Response) => {
+    try {
+        const token = req.cookies?.accessToken
+        if (!token) {
+            res.status(401).json({ error: 'Not authenticated' })
+            return
+        }
+
+        const payload = verifyAccessToken(token) as { id: string }
+        const user = await prisma.user.findUnique({
+            where: { id: Number(payload.id) },
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                createdAt: true
+            }
+        })
+
+        if (!user) {
+            res.status(404).json({ error: 'User not found' })
+            return
+        }
+
+        res.json({ user })
+    } catch (err) {
+        console.error(err)
+        res.status(401).json({ error: 'Invalid or expired token' })
+    }
+}
+
+
+const login = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { email, password } = loginSchema.parse(req.body)
+
+        const user = await prisma.user.findUnique({ where: { email }})
+        
+        if (!user) {
+            res.status(401).send('Invalid email or password')
+            return
+        }
+
+        const isValid = await bcrypt.compare(password, user.password)
+        if (!isValid) {
+            res.status(401).send('Invalid email or password')
+            return
+        }
+
+        // Si pasa validación, crea un objeto sin password para enviar
+        const { password: _, ...userWithoutPassword } = user
+
+        const accessToken = signAccessToken({ id: user.id })
+        const refreshToken = signRefreshToken({ id: user.id })
+
+        // Seteamos cookies con las opciones recomendadas
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            maxAge: 15 * 60 * 1000, // 15 minutos en ms
+        })
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: false, // o true si no necesitás leerlo en frontend
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días en ms
+        })
+
+        // Enviamos solo el user en el body (sin tokens)
+        res.status(200).json({ user: userWithoutPassword })
+    } catch (e) {
+        if (e instanceof z.ZodError) {
+            res.status(400).json({ error: e.errors })
+            return
+        }
+        console.error(e)
+        res.status(500).send('Internal Server Error')
+    }
+}
+
+export default {
+    login,
+    me
+}

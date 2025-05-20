@@ -5,31 +5,31 @@ import app from './app'
 const server = http.createServer(app)
 
 const io = new SocketIOServer(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST'],
-  },
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST'],
+    },
 })
 
 io.on('connection', (socket: Socket) => {
-  console.log('Usuario conectado:', socket.id)
+    console.log('Usuario conectado:', socket.id)
 
-  socket.on('mensaje:nuevo', (mensaje: string) => {
-    console.log('Mensaje recibido:', mensaje)
+    socket.on('mensaje:nuevo', (mensaje: string) => {
+        console.log('Mensaje recibido:', mensaje)
 
-    io.emit('mensaje:recibido', {
-      id: socket.id,
-      texto: mensaje,
-      fecha: new Date().toISOString(),
+        io.emit('mensaje:recibido', {
+            id: socket.id,
+            texto: mensaje,
+            fecha: new Date().toISOString(),
+        })
     })
-  })
 
-  socket.on('disconnect', () => {
-    console.log('Usuario desconectado:', socket.id)
-  })
+    socket.on('disconnect', () => {
+        console.log('Usuario desconectado:', socket.id)
+    })
 })
 
 const PORT = process.env.PORT || 3003
 server.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`)
+    console.log(`Servidor corriendo en http://localhost:${PORT}`)
 })
