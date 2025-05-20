@@ -6,11 +6,17 @@ This is the backend of a real-time chat application built with modern technologi
 
 ## 🚀 Tech Stack
 
-* **TypeScript** – Strongly typed JavaScript for safer, scalable code.
-* **Express.js** – Fast, minimalist web framework for building APIs.
-* **Socket.IO** – Real-time bi-directional communication layer for chat.
-* **Prisma ORM** – Modern ORM to interact with MySQL database.
-* **MySQL (XAMPP)** – Relational database used for persistent storage.
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io/)
+[![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![MySQL](https://img.shields.io/badge/MySQL-00758F?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+
+- **TypeScript** – Strongly typed JavaScript for safer, scalable code.
+- **Express.js** – Fast, minimalist web framework for building APIs.
+- **Socket.IO** – Real-time bi-directional communication layer for chat.
+- **Prisma ORM** – Modern ORM to interact with MySQL database.
+- **MySQL (XAMPP)** – Relational database used for persistent storage.
 
 ---
 
@@ -84,3 +90,14 @@ tree -a -I 'node_modules|.git|dist' > structure.txt
 | `npx prisma migrate dev --name init`          | Run initial migration and apply changes           |
 | `npx prisma generate`                         | Regenerate Prisma client after schema changes     |
 | `npx prisma studio`                           | Launch Prisma Studio (GUI for DB management)      |
+
+## 📌 Notes
+
+- Make sure **MySQL** is running via **XAMPP** or any other MySQL server.
+- You can use **Prisma Studio** to visualize and edit data in your DB.
+- Prisma schema is located in `prisma/schema.prisma`.
+- **Socket.IO** is initialized in `server.ts` and ready to handle real-time events like message sending and receiving.
+
+## 👨‍💻 Author
+
+Built with ❤️ by [Brad](https://github.com/BradMoyetones)
