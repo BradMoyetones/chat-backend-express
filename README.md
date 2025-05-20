@@ -73,3 +73,14 @@ src/
 ```bash
 tree -a -I 'node_modules|.git|dist' > structure.txt
 ```
+
+## 🛠️ Useful Commands
+
+| Command                                       | Description                                       |
+|----------------------------------------------|---------------------------------------------------|
+| `npm run dev`                                 | Start development server using nodemon            |
+| `npm run build`                               | Compile the project to JavaScript (`dist/`)       |
+| `npm start`                                   | Run the compiled project                          |
+| `npx prisma migrate dev --name init`          | Run initial migration and apply changes           |
+| `npx prisma generate`                         | Regenerate Prisma client after schema changes     |
+| `npx prisma studio`                           | Launch Prisma Studio (GUI for DB management)      |
