@@ -20,35 +20,35 @@ To get this project up and running on your local machine, follow these steps:
 
 1.  **Clone the repository:**
 ```bash
-    git clone [https://github.com/your-username/your-chat-backend.git](https://github.com/your-username/your-chat-backend.git)
-    cd your-chat-backend
+git clone [https://github.com/your-username/your-chat-backend.git](https://github.com/your-username/your-chat-backend.git)
+cd your-chat-backend
 ```
 
 2.  **Install dependencies:**
 ```bash
-    npm install
+npm install
 ```
 
 3.  **Create a `.env` file:**
 Based on `.env.example`, create a `.env` file in the root of the project and set your database URL:
 ```
-    DATABASE_URL="mysql://user:password@localhost:3306/chat_app"
+DATABASE_URL="mysql://user:password@localhost:3306/chat_app"
 ```
 *Ensure you replace `user`, `password`, `localhost:3306`, and `chat_app` with your MySQL database details.*
 
 4.  **Generate the Prisma client:**
 ```bash
-    npx prisma generate
+npx prisma generate
 ```
 
 5.  **Run database migrations:**
 ```bash
-    npx prisma migrate dev --name init
+npx prisma migrate dev --name init
 ```
 
 6.  **Start the development server:**
 ```bash
-    npm run dev
+npm run dev
 ```
 
 ---
@@ -57,6 +57,7 @@ Based on `.env.example`, create a `.env` file in the root of the project and set
 
 The backend is organized following a modular architecture:
 
+```bash
 src/
 ├── controllers/    # Business logic and request handlers
 ├── routes/         # Express route definitions
@@ -64,6 +65,7 @@ src/
 ├── middlewares/    # Express middlewares
 ├── app.ts          # Main application setup and middleware configuration
 └── server.ts       # Server initialization and Socket.IO integration
+```
 
 
 *To export the current file/folder structure (excluding `node_modules`, `.git`, and `dist`), you can use the `tree` command:*
