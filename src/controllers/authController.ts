@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
-import { signAccessToken, signRefreshToken, verifyAccessToken } from '../utils/jwt'
+import { signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken } from '../utils/jwt'
 import { z } from 'zod'
 
 const prisma = new PrismaClient()
@@ -94,7 +94,35 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     }
 }
 
+const refreshToken = (req: Request, res: Response) => {
+    const refreshToken = req.headers['x-refresh-token'] as string | undefined
+
+    if (!refreshToken) {
+        res.status(400).json({ error: 'Refresh token missing' })
+        return
+    }
+
+    try {
+        const payload = verifyRefreshToken(refreshToken)
+
+        const newAccessToken = signAccessToken({ id: (payload as any).id })
+
+        res.cookie('accessToken', newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            maxAge: 60 * 15 * 1000, // 15 min
+        })
+
+        res.status(200).json({ ok: true })
+    } catch (err) {
+        res.status(401).json({ error: 'Invalid refresh token' })
+    }
+}
+
+
 export default {
     login,
-    me
+    me,
+    refreshToken
 }

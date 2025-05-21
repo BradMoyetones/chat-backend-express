@@ -20,4 +20,74 @@ model User {
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
+
+  messages     Message[]     @relation("SenderMessages")
+  participants Participant[]
+  readReceipts MessageRead[]
+  attachments  Attachment[]
+
+  conversationsCreated Conversation[] @relation("UserConversationsCreated")
+}
+
+model Conversation {
+  id        Int      @id @default(autoincrement())
+  title     String?
+  isGroup   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  creatorId Int
+  creator   User @relation("UserConversationsCreated", fields: [creatorId], references: [id])
+
+  participants Participant[]
+  messages     Message[]
+}
+
+model Participant {
+  id             Int       @id @default(autoincrement())
+  userId         Int
+  conversationId Int
+  joinedAt       DateTime  @default(now())
+  deletedAt      DateTime?
+
+  user         User         @relation(fields: [userId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+}
+
+model Message {
+  id             Int       @id @default(autoincrement())
+  content        String?
+  senderId       Int
+  conversationId Int
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime? @updatedAt
+  deleted        Boolean   @default(false)
+
+  sender       User          @relation("SenderMessages", fields: [senderId], references: [id])
+  conversation Conversation  @relation(fields: [conversationId], references: [id])
+  reads        MessageRead[]
+  attachments  Attachment[]
+}
+
+model MessageRead {
+  id        Int      @id @default(autoincrement())
+  messageId Int
+  userId    Int
+  readAt    DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([messageId, userId]) // asegura que un mensaje es leído solo una vez por usuario
+}
+
+model Attachment {
+  id         Int      @id @default(autoincrement())
+  messageId  Int
+  userId     Int // quién lo subió
+  url        String
+  type       String // image, video, file, etc.
+  uploadedAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
 }
