@@ -52,7 +52,32 @@ const index = async (req: Request, res: Response) => {
             }
         })
 
-        res.status(200).json(conversations)
+        const conversationsWithUnseen = await Promise.all(
+            conversations.map(async (conversation) => {
+                const unseenCount = await prisma.message.count({
+                    where: {
+                        conversationId: conversation.id,
+                        deleted: false,
+                        reads: {
+                            none: {
+                                userId: userId
+                            }
+                        },
+                        senderId: {
+                            not: userId // para que no cuente sus propios mensajes
+                        }
+                    }
+                })
+
+                return {
+                    ...conversation,
+                    unseenCount
+                }
+            })
+        )
+
+
+        res.status(200).json(conversationsWithUnseen)
     } catch (e) {
         console.error(e)
         res.status(500).send('Internal Server Error')
@@ -84,13 +109,21 @@ const find = async (req: Request, res: Response) => {
                 }},
                 messages: {
                     orderBy: { createdAt: 'asc' },
-                    include: { sender: {
-                        select: {
-                            id: true,
-                            firstName: true,
-                            lastName: true,
-                        }
-                    }}
+                    include: { 
+                        sender: {
+                            select: {
+                                id: true,
+                                firstName: true,
+                                lastName: true,
+                            }
+                        },
+                        reads: {
+                            select: {
+                                userId: true,
+                                readAt: true,
+                            }
+                        },
+                    }
                 }
             }
         })

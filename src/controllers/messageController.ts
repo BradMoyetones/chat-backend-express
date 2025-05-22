@@ -51,19 +51,50 @@ const index = async (req: Request, res: Response) => {
 // POST /conversations/:conversationId/messages
 const store = async (req: Request, res: Response) => {
     try {
+        if (!req.user || typeof req.user === "string") {
+            res.status(401).json({ error: "Unauthorized" })
+            return
+        }
+
+        const userId = req.user.id
         const { conversationId } = conversationParamSchema.parse(req.params)
         const data = messageCreateSchema.parse(req.body)
+
+        // Validar que el usuario es participante de la conversación
+        const conversation = await prisma.conversation.findUnique({
+            where: { id: conversationId },
+            include: {
+                participants: true,
+            },
+        })
+
+        if (!conversation) {
+            res.status(404).json({ error: "Conversation not found" })
+            return
+        }
+
+        const isParticipant = conversation.participants.some(p => p.userId === userId)
+        if (!isParticipant) {
+            res.status(403).json({ error: "Access denied" })
+            return
+        }
 
         const message = await prisma.message.create({
             data: {
                 content: data.content,
                 senderId: data.senderId,
-                conversationId
+                conversationId,
             },
             include: {
-                sender: true,
-                reads: true
-            }
+                sender: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                    },
+                },
+                reads: true,
+            },
         })
 
         res.status(201).json(message)
@@ -73,7 +104,7 @@ const store = async (req: Request, res: Response) => {
             return
         }
         console.error(e)
-        res.status(500).send('Internal Server Error')
+        res.status(500).send("Internal Server Error")
     }
 }
 

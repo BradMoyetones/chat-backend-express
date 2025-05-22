@@ -48,8 +48,7 @@ router.patch('/messages/:id/delete', authenticateJWT, messageController.softDele
 
 
 // Message Reads (visto/entregado)
-router.get('/message-reads', authenticateJWT, messageReadController.index)
-router.post('/message-reads', authenticateJWT, messageReadController.store)
+router.post('/message-reads', authenticateJWT, messageReadController.markAsRead)
 
 // Ruta pública (crear usuario)
 router.post('/users', userController.store)
