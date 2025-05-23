@@ -28,6 +28,64 @@ const index = async (req: Request, res: Response, next: NextFunction) => {
   }
 }
 
+// GET /users/search?q=...
+const search = async (req: Request, res: Response) => {
+  try {
+    // Validar usuario autenticado
+    if (!req.user || typeof req.user === 'string') {
+      res.status(401).json({ error: 'Unauthorized' })
+      return
+    }
+
+    const userId = req.user.id
+
+    // Validar query param `q`
+    const schema = z.object({
+      q: z.string().min(1, 'Search query is required'),
+    })
+
+    const { q } = schema.parse(req.query)
+
+    // Buscar usuarios por nombre, apellido o email
+    const results = await prisma.user.findMany({
+      where: {
+        id: { not: userId },
+        OR: [
+          { firstName: { contains: q} },
+          { lastName: { contains: q} },
+          { email: { contains: q} },
+        ],
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        sentRequests: {
+          where: { receiverId: userId },
+          select: { id: true, status: true },
+        },
+        receivedRequests: {
+          where: { senderId: userId },
+          select: { id: true, status: true },
+        },
+      },
+      take: 20,
+    })
+
+
+    res.status(200).json(results)
+  } catch (e) {
+    if (e instanceof z.ZodError) {
+      res.status(400).json({ error: e.errors })
+      return
+    }
+
+    console.error(e)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+}
+
 // GET /users/:id
 const find = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -124,6 +182,7 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
 }
 
 export default {
+  search,
   index,
   find,
   store,

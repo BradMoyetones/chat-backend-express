@@ -72,7 +72,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             path: '/',
-            maxAge: 15 * 60 * 1000, // 15 minutos en ms
+            maxAge: 1 * 24 * 60 * 60 * 1000, // 1 dia
         })
 
         res.cookie('refreshToken', refreshToken, {
@@ -111,7 +111,7 @@ const refreshToken = (req: Request, res: Response) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             path: '/',
-            maxAge: 60 * 15 * 1000, // 15 min
+            maxAge: 1 * 24 * 60 * 60 * 1000, // 1 dia
         })
 
         res.status(200).json({ ok: true })

@@ -1,6 +1,6 @@
 // middlewares/authenticateJWT.ts
 import { Request, Response, NextFunction } from 'express'
-import { verifyAccessToken, verifyRefreshToken, signAccessToken } from '../utils/jwt'
+import { verifyAccessToken } from '../utils/jwt'
 
 export const authenticateJWT = (req: Request, res: Response, next: NextFunction): void => {
     const token = req.cookies?.accessToken

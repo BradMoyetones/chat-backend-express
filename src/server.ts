@@ -67,6 +67,13 @@ io.on('connection', async (socket: Socket) => {
         socket.broadcast.emit("usuario:offline", userId)
     })
 
+    // Amigos online
+    socket.on('amigos:online', (ids: number[], callback: (onlineIds: number[]) => void) => {
+        const onlineIds = ids.filter(id => onlineUsers.has(id))
+        callback(onlineIds)
+    })
+
+
     // Cuando se desconecta automáticamente (ej. se cierra la pestaña)
     socket.on('disconnect', () => {
         const userId = socket.data.userId

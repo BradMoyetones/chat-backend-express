@@ -4,7 +4,7 @@ import { StringValue } from 'ms'
 const accessSecret = process.env.JWT_ACCESS_SECRET as string
 const refreshSecret = process.env.JWT_REFRESH_SECRET as string
 
-const accessExpires = (process.env.JWT_ACCESS_EXPIRES || '15m') as StringValue
+const accessExpires = (process.env.JWT_ACCESS_EXPIRES || '1d') as StringValue
 const refreshExpires = (process.env.JWT_REFRESH_EXPIRES || '7d') as StringValue
 
 const signOptionsAccess: SignOptions = { expiresIn: accessExpires }
