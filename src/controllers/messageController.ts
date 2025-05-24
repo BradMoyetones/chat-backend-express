@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
+import { emitToUser } from '../lib/socketHelpers'
 
 const prisma = new PrismaClient()
 
@@ -96,6 +97,10 @@ const store = async (req: Request, res: Response) => {
                 reads: true,
             },
         })
+
+        for (const participant of conversation.participants) {
+            emitToUser(participant.userId, 'mensaje:recibido', message)
+        }
 
         res.status(201).json(message)
     } catch (e) {

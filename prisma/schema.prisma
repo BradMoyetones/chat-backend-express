@@ -39,7 +39,7 @@ model Conversation {
   createdAt DateTime @default(now())
 
   creatorId Int
-  creator   User @relation("UserConversationsCreated", fields: [creatorId], references: [id])
+  creator   User @relation("UserConversationsCreated", fields: [creatorId], references: [id], onDelete: Cascade)
 
   participants Participant[]
   messages     Message[]
@@ -52,8 +52,8 @@ model Participant {
   joinedAt       DateTime  @default(now())
   deletedAt      DateTime?
 
-  user         User         @relation(fields: [userId], references: [id])
-  conversation Conversation @relation(fields: [conversationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 }
 
 model Message {
@@ -65,8 +65,8 @@ model Message {
   updatedAt      DateTime? @updatedAt
   deleted        Boolean   @default(false)
 
-  sender       User          @relation("SenderMessages", fields: [senderId], references: [id])
-  conversation Conversation  @relation(fields: [conversationId], references: [id])
+  sender       User          @relation("SenderMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  conversation Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   reads        MessageRead[]
   attachments  Attachment[]
 }
@@ -77,22 +77,22 @@ model MessageRead {
   userId    Int
   readAt    DateTime @default(now())
 
-  message Message @relation(fields: [messageId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([messageId, userId]) // asegura que un mensaje es leído solo una vez por usuario
+  @@unique([messageId, userId])
 }
 
 model Attachment {
   id         Int      @id @default(autoincrement())
   messageId  Int
-  userId     Int // quién lo subió
+  userId     Int
   url        String
-  type       String // image, video, file, etc.
+  type       String
   uploadedAt DateTime @default(now())
 
-  message Message @relation(fields: [messageId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum RequestStatus {
@@ -100,7 +100,6 @@ enum RequestStatus {
   ACCEPTED
   REJECTED
 }
-
 
 model ContactRequest {
   id           Int      @id @default(autoincrement())
@@ -110,8 +109,8 @@ model ContactRequest {
   createdAt    DateTime @default(now())
   respondedAt  DateTime?
 
-  sender   User @relation("SentRequests", fields: [senderId], references: [id])
-  receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id])
+  sender   User @relation("SentRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
 
-  @@unique([senderId, receiverId]) // evita duplicados
+  @@unique([senderId, receiverId])
 }

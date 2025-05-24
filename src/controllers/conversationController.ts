@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
+import { emitToUser } from '../lib/socketHelpers'
 
 const prisma = new PrismaClient()
 
@@ -160,21 +161,51 @@ const store = async (req: Request, res: Response) => {
         const userId = req.user.id
         const data = createConversationSchema.parse(req.body)
 
-        // Aseguramos que el creador esté en la lista de participantes
+        // 🔒 Validaciones
+        if (!data.isGroup && data.participantIds.length !== 1) {
+            res.status(400).json({ error: 'You must select exactly one participant for a private conversation.' })
+            return
+        }
+
+        if (data.isGroup && (!data.title || data.title.trim() === '')) {
+            res.status(400).json({ error: 'Group conversations must have a title.' })
+            return
+        }
+
+        // ✅ Unimos participantes sin duplicar
         const allParticipantIds = Array.from(new Set([userId, ...data.participantIds]))
 
         const conversation = await prisma.conversation.create({
             data: {
                 isGroup: data.isGroup,
                 title: data.title,
-                creatorId: userId,   // <-- acá asignás quién creó la conversación
+                creatorId: userId,
                 participants: {
                     create: allParticipantIds.map(uid => ({ userId: uid }))
                 }
             },
             include: {
-                participants: { include: { user: true } }
+                participants: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                firstName: true,
+                                lastName: true,
+                            }
+                        }
+                    }
+                },
+                messages: {
+                    orderBy: { createdAt: 'desc' },
+                    take: 1
+                }
             }
+        })
+
+        // 🔔 Emitimos evento a todos los usuarios incluidos
+        allParticipantIds.forEach(participantId => {
+            emitToUser(participantId, 'conversation:created', conversation)
         })
 
         res.status(201).json(conversation)

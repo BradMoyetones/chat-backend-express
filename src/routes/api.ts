@@ -60,6 +60,7 @@ router.get('/contacts/request', authenticateJWT, contactRequestController.receiv
 router.post('/contacts/request', authenticateJWT, contactRequestController.send)
 router.post('/contacts/request/:id/accept', authenticateJWT, contactRequestController.accept)
 router.post('/contacts/request/:id/reject', authenticateJWT, contactRequestController.reject)
-router.delete('/contacts/request/:id/delete', authenticateJWT, contactRequestController.cancel)
+router.delete('/contacts/request/:id/cancel', authenticateJWT, contactRequestController.cancel)
+router.delete('/contacts/:id/delete', authenticateJWT, contactRequestController.deleteFriend)
 
 export default router

@@ -2,6 +2,7 @@
 
 import { Request, Response } from 'express'
 import { PrismaClient } from '@prisma/client'
+import { emitToUser } from '../lib/socketHelpers'
 const prisma = new PrismaClient()
 
 
@@ -23,20 +24,36 @@ async function friends(req: Request, res: Response) {
                 ],
             },
             include: {
-                sender: true,
-                receiver: true,
+                sender: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true
+                    },
+                },
+                receiver: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true
+                    },
+                },
             },
         })
 
-        const friends = contacts.map(cr =>
-            cr.senderId === userId ? cr.receiver : cr.sender
-        )
+        const friends = contacts.map(cr => ({
+            ...cr,
+            friend: cr.senderId === userId ? cr.receiver : cr.sender
+        }))
 
-        res.json(friends)
+        const receivedRequests = await getReceivedRequests(userId)
+
+        res.json({friends, receivedRequests})
     } catch (err) {
       res.status(500).json({ error: 'Error retrieving contacts' })
     }
 }
+
 async function send(req: Request, res: Response) {
     if (!req.user || typeof req.user === 'string') {
         res.status(401).json({ error: 'Unauthorized' })
@@ -83,7 +100,13 @@ async function send(req: Request, res: Response) {
                 senderId,
                 receiverId,
             },
+            include: {
+                sender: true,
+                receiver: true
+            }
         })
+
+        emitToUser(receiverId, 'contact:request:received', request)
 
         res.json(request)
     } catch (err) {
@@ -99,23 +122,33 @@ async function received(req: Request, res: Response) {
     }
 
     try {
-        const requests = await prisma.contactRequest.findMany({
-            where: {
-                receiverId: req.user.id,
-                status: 'PENDING',
-            },
-                include: {
-                sender: true,
-            },
-        })
-
+        const requests = await getReceivedRequests(req.user.id)
         res.json(requests)
     } catch (err) {
         res.status(500).json({ error: 'Internal server error' })
     }
 }
 
-  // Aceptar solicitud
+// Solicitudes recibidas (Callback)
+async function getReceivedRequests(userId: number) {
+    return prisma.contactRequest.findMany({
+        where: {
+            receiverId: userId,
+            status: 'PENDING',
+        },
+        include: {
+            sender: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true
+                }
+            },
+        },
+    })
+}
+
+// Aceptar solicitud
 async function accept(req: Request, res: Response) {
     if (!req.user || typeof req.user === 'string') {
         res.status(401).json({ error: 'Unauthorized' })
@@ -127,6 +160,22 @@ async function accept(req: Request, res: Response) {
     try {
         const request = await prisma.contactRequest.findUnique({
             where: { id: Number(id) },
+            include: {
+                sender: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true
+                    }
+                },
+                receiver: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true
+                    }
+                }
+            }
         })
 
         if (!request || request.receiverId !== req.user.id || request.status !== 'PENDING') {
@@ -137,7 +186,36 @@ async function accept(req: Request, res: Response) {
         const updated = await prisma.contactRequest.update({
             where: { id: Number(id) },
             data: { status: 'ACCEPTED' },
+            include: {
+                sender: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true
+                    }
+                },
+                receiver: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true
+                    }
+                }
+            }
         })
+
+        const toSender = {
+            ...updated,
+            friend: request.receiver
+        }
+
+        const toReceiver = {
+            ...updated,
+            friend: request.sender
+        }
+
+        emitToUser(request.senderId, 'contact:request:accept', toSender)
+        emitToUser(request.receiverId, 'contact:request:accept', toReceiver)
 
         res.json(updated)
     } catch (err) {
@@ -182,20 +260,29 @@ async function cancel(req: Request, res: Response) {
     }
 
     const { id } = req.params
+    const requestId = Number(id)
+    if (isNaN(requestId)) {
+        res.status(400).json({ error: 'Invalid request ID' })
+        return
+    }
+
+    const userId = req.user.id
 
     try {
         const request = await prisma.contactRequest.findUnique({
-            where: { id: Number(id) },
+            where: { id: requestId },
         })
 
-        if (!request || request.senderId !== req.user.id || request.status !== 'PENDING') {
+        if (!request || request.senderId !== userId || request.status !== 'PENDING') {
             res.status(404).json({ error: 'Request not found or not authorized to cancel' })
             return
         }
 
         await prisma.contactRequest.delete({
-            where: { id: Number(id) },
+            where: { id: requestId },
         })
+
+        emitToUser(request.receiverId, 'contact:request:cancel', request)
 
         res.json({ success: true })
     } catch (err) {
@@ -203,6 +290,49 @@ async function cancel(req: Request, res: Response) {
     }
 }
 
+async function deleteFriend(req: Request, res: Response) {
+    if (!req.user || typeof req.user === 'string') {
+        res.status(401).json({ error: 'Unauthorized' })
+        return
+    }
+
+    const { id } = req.params
+    const requestId = Number(id)
+    if (isNaN(requestId)) {
+        res.status(400).json({ error: 'Invalid request ID' })
+        return
+    }
+
+    const userId = req.user.id
+
+    try {
+        const request = await prisma.contactRequest.findUnique({
+            where: { id: requestId },
+        })
+
+        // Verificar que exista, que esté aceptada y que el user sea parte
+        if (
+            !request ||
+            request.status !== 'ACCEPTED' ||
+            (request.senderId !== userId && request.receiverId !== userId)
+        ) {
+            res.status(404).json({ error: 'Friendship not found or not authorized' })
+            return
+        }
+
+        await prisma.contactRequest.delete({
+            where: { id: requestId },
+        })
+
+        // Emitimos a ambos que se eliminó la amistad
+        emitToUser(request.senderId, 'contact:deleted', request)
+        emitToUser(request.receiverId, 'contact:deleted', request)
+
+        res.json({ success: true })
+    } catch (err) {
+        res.status(500).json({ error: 'Internal server error' })
+    }
+}
 
 export default {
     friends, 
@@ -210,5 +340,6 @@ export default {
     received,
     accept,
     reject,
-    cancel
+    cancel,
+    deleteFriend
 }

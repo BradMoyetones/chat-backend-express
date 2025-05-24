@@ -4,6 +4,7 @@ import app from './app'
 import { getUserConversations } from './lib/socketHelpers'
 
 const server = http.createServer(app)
+process.env.TZ = 'America/Bogota'
 
 export const io = new SocketIOServer(server, {
     cors: {
@@ -12,7 +13,7 @@ export const io = new SocketIOServer(server, {
     },
 })
 
-const onlineUsers = new Map<number, string>() // userId -> socketId
+export const onlineUsers = new Map<number, string>() // userId -> socketId
 
 io.on('connection', async (socket: Socket) => {
     console.log('Usuario conectado:', socket.id)
@@ -32,12 +33,6 @@ io.on('connection', async (socket: Socket) => {
         conversationIds.forEach((convId) => {
             socket.join(`conversation:${convId}`)
         })
-    })
-
-    socket.on('mensaje:nuevo', (mensaje) => {
-        const { conversationId } = mensaje
-        // Emitir el mensaje solo a los participantes de esa conversación
-        io.to(`conversation:${conversationId}`).emit('mensaje:recibido', mensaje)
     })
 
     socket.on('mensaje:leido', ({
