@@ -68,6 +68,14 @@ io.on('connection', async (socket: Socket) => {
         callback(onlineIds)
     })
 
+    socket.on('typing', ({ conversationId, userId }) => {
+        socket.to(`conversation:${conversationId}`).emit('typing', { conversationId, userId });
+    });
+
+    socket.on('stopTyping', ({ conversationId, userId }) => {
+        socket.to(`conversation:${conversationId}`).emit('stopTyping', { conversationId, userId });
+    });
+
 
     // Cuando se desconecta automáticamente (ej. se cierra la pestaña)
     socket.on('disconnect', () => {
