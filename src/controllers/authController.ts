@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
 import { signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken } from '../utils/jwt'
 import { z } from 'zod'
+import ms, { StringValue } from 'ms'
 
 const prisma = new PrismaClient()
 
@@ -72,14 +73,14 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             path: '/',
-            maxAge: 1 * 24 * 60 * 60 * 1000, // 1 dia
+            maxAge: ms(process.env.JWT_ACCESS_EXPIRES as StringValue || '1d'), // 1 dia
         })
 
         res.cookie('refreshToken', refreshToken, {
-            httpOnly: false, // o true si no necesitás leerlo en frontend
+            httpOnly: true, // o true si no necesitás leerlo en frontend
             secure: process.env.NODE_ENV === 'production',
             path: '/',
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días en ms
+            maxAge: ms(process.env.JWT_REFRESH_EXPIRES as StringValue || '7d'), // 7 días en ms
         })
 
         // Enviamos solo el user en el body (sin tokens)
@@ -94,8 +95,30 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     }
 }
 
+const logout = async (req: Request, res: Response) => {
+    try {
+        res.clearCookie('accessToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+        })
+
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+        })
+
+        res.status(200).json({ message: 'Logged out successfully' })
+    } catch (error) {
+        console.error(error)
+        res.status(500).send('Internal Server Error')
+    }
+}
+
+
 const refreshToken = (req: Request, res: Response) => {
-    const refreshToken = req.headers['x-refresh-token'] as string | undefined
+    const refreshToken = req.cookies?.refreshToken
 
     if (!refreshToken) {
         res.status(400).json({ error: 'Refresh token missing' })
@@ -111,7 +134,7 @@ const refreshToken = (req: Request, res: Response) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             path: '/',
-            maxAge: 1 * 24 * 60 * 60 * 1000, // 1 dia
+            maxAge: ms(process.env.JWT_ACCESS_EXPIRES as StringValue || '1d'), // 1 dia
         })
 
         res.status(200).json({ ok: true })
@@ -124,5 +147,6 @@ const refreshToken = (req: Request, res: Response) => {
 export default {
     login,
     me,
-    refreshToken
+    refreshToken,
+    logout
 }

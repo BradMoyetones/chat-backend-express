@@ -16,6 +16,7 @@ const router = Router()
 router.get('/', helloController.getHello)
 
 router.post('/auth/login', authController.login)
+router.post('/auth/logout', authController.logout)
 router.post('/auth/refresh', authController.refreshToken)
 router.get('/auth/me', authenticateJWT, authController.me)
 
