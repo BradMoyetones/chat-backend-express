@@ -1,15 +1,28 @@
 import { Request, Response, NextFunction } from 'express'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
-import { signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken } from '../utils/jwt'
+import { signAccessToken, signRefreshToken, signVerifyEmailToken, verifyAccessToken, verifyEmailToken, verifyRefreshToken } from '../utils/jwt'
 import { z } from 'zod'
 import ms, { StringValue } from 'ms'
+import { generateVerificationCode } from '../utils/utils'
+import { sendVerificationEmail } from '../lib/mailer'
 
 const prisma = new PrismaClient()
 
 const loginSchema = z.object({
     email: z.string().email(),
     password: z.string().min(6),
+})
+
+const registerSchema = z.object({
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
+    email: z.string().email(),
+    password: z.string().min(6),
+})
+
+const verifySchema = z.object({
+    pin: z.string().length(6),
 })
 
 const me = async (req: Request, res: Response) => {
@@ -95,6 +108,137 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     }
 }
 
+const register = async (req: Request, res: Response) => {
+    try {
+        const { firstName, lastName, email, password } = registerSchema.parse(req.body)
+
+        const existing = await prisma.user.findUnique({ where: { email } })
+        if (existing) {
+            res.status(400).json({ error: 'Email ya registrado' })
+            return
+        }
+
+        const hashed = await bcrypt.hash(password, 10)
+        const user = await prisma.user.create({
+            data: {
+                firstName,
+                lastName,
+                email,
+                password: hashed,
+            },
+        })
+
+        const code = generateVerificationCode()
+        const expiresMs = ms(process.env.JWT_VERIFY_EMAIL_EXPIRES as StringValue || '10m')
+        const expires = new Date(Date.now() + expiresMs)
+        
+
+        await prisma.emailVerificationCode.create({
+            data: {
+                userId: user.id,
+                code,
+                expiresAt: expires,
+            },
+        })
+
+        await sendVerificationEmail(user.email, code)
+
+        const token = signVerifyEmailToken({ userId: user.id })
+
+        res.cookie('verify_email_token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            maxAge: ms(process.env.JWT_VERIFY_EMAIL_EXPIRES as StringValue || '10m'),
+            sameSite: 'lax',
+        })
+
+        res.status(201).json({ message: 'Registro exitoso. Revisa tu email para verificar tu cuenta.' })
+    } catch (e) {
+        if (e instanceof z.ZodError) {
+            res.status(400).json({ error: e.errors })
+            return
+        }
+        console.error(e)
+        res.status(500).send('Error interno')
+    }
+}
+
+const verifyEmail = async (req: Request, res: Response) => {
+    try {
+        const { pin } = verifySchema.parse(req.body)
+
+        const token = req.cookies.verify_email_token
+        if (!token) {
+            res.status(401).json({ error: 'Token de verificación no encontrado' })
+            return
+        }
+
+        const payload = verifyEmailToken(token)
+        if (typeof payload !== 'object' || !payload.userId) {
+            res.status(401).json({ error: 'Token inválido' })
+            return
+        }
+
+        const userId = payload.userId
+        const verificationCode = await prisma.emailVerificationCode.findFirst({
+            where: {
+                userId,
+                    code: pin,
+                    expiresAt: {
+                    gt: new Date(),
+                },
+            },
+        })
+
+        if (!verificationCode) {
+            res.status(400).json({ error: 'Código inválido o expirado' })
+            return
+        }
+
+        // Actualiza el usuario como verificado
+        await prisma.user.update({
+            where: { id: userId },
+            data: { isVerified: true },
+        })
+
+        // Borra el código usado
+        await prisma.emailVerificationCode.delete({
+            where: { id: verificationCode.id },
+        })
+
+        // Elimina cookie temporal
+        res.clearCookie('verify_email_token')
+
+        // Genera cookies normales como en login
+        const accessToken = signAccessToken({ id: userId })
+        const refreshToken = signRefreshToken({ id: userId })
+
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            maxAge: ms(process.env.JWT_ACCESS_EXPIRES as StringValue || '1d'),
+        })
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            maxAge: ms(process.env.JWT_REFRESH_EXPIRES as StringValue || '7d'),
+        })
+
+        res.status(200).json({ message: 'Email verificado exitosamente' })
+    } catch (e) {
+        if (e instanceof z.ZodError) {
+            res.status(400).json({ error: e.errors })
+            return
+        }
+        console.error(e)
+        res.status(500).send('Error interno del servidor')
+    }
+}
+
 const logout = async (req: Request, res: Response) => {
     try {
         res.clearCookie('accessToken', {
@@ -146,6 +290,8 @@ const refreshToken = (req: Request, res: Response) => {
 
 export default {
     login,
+    register,
+    verifyEmail,
     me,
     refreshToken,
     logout

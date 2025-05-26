@@ -20,6 +20,7 @@ model User {
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
+  isVerified Boolean @default(false)
 
   messages     Message[]     @relation("SenderMessages")
   participants Participant[]
@@ -30,6 +31,8 @@ model User {
 
   sentRequests     ContactRequest[] @relation("SentRequests")
   receivedRequests ContactRequest[] @relation("ReceivedRequests")
+
+  emailVerificationCodes EmailVerificationCode[]
 }
 
 model Conversation {
@@ -113,4 +116,14 @@ model ContactRequest {
   receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@unique([senderId, receiverId])
+}
+
+model EmailVerificationCode {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
