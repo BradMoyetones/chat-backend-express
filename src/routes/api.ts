@@ -8,6 +8,7 @@ import participantController from '../controllers/participantController'
 import messageController from '../controllers/messageController'
 import messageReadController from '../controllers/messageReadController'
 import contactRequestController from '../controllers/contactRequestController'
+import profileController from '../controllers/profileController'
 
 import { authenticateJWT } from '../middlewares/authenticateJWT'
 
@@ -18,9 +19,13 @@ router.get('/', helloController.getHello)
 router.post('/auth/login', authController.login)
 router.post('/auth/register', authController.register)
 router.post('/auth/verify-email', authController.verifyEmail)
+router.post('/auth/resend-verify-email', authController.resendVerification)
 router.post('/auth/logout', authController.logout)
 router.post('/auth/refresh', authController.refreshToken)
 router.get('/auth/me', authenticateJWT, authController.me)
+
+// Profile
+router.post('/profile/update', authenticateJWT, profileController.updateInformation)
 
 // Users routes (protegidas)
 router.get('/users', authenticateJWT, userController.index)
