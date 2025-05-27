@@ -41,6 +41,7 @@ const me = async (req: Request, res: Response) => {
                 firstName: true,
                 lastName: true,
                 email: true,
+                image: true,
                 createdAt: true
             }
         })

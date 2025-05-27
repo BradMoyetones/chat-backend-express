@@ -92,6 +92,7 @@ const store = async (req: Request, res: Response) => {
                         id: true,
                         firstName: true,
                         lastName: true,
+                        image: true
                     },
                 },
                 reads: true,

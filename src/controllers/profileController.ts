@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express'
 import bcrypt from 'bcrypt'
 import { z } from 'zod'
 import { PrismaClient } from '@prisma/client'
+import path from 'path'
+import fs from 'fs/promises'
 const prisma = new PrismaClient()
 
 const updateSchema = z
@@ -11,6 +13,17 @@ const updateSchema = z
         password: z.string().min(6, 'Current password is required').optional(),
         newPassword: z.string().min(6, 'New password must be at least 6 characters').optional(),
         repeatPassword: z.string().min(6, 'Repeat password must be at least 6 characters').optional(),
+        image: z
+            .instanceof(File)
+            .optional()
+            .nullable()
+            .refine((file) => {
+                if (!file) return true
+                return file.size <= 5 * 1024 * 1024 // 5MB
+            }, {
+                message: "Image must be less than 5MB",
+                path: ["image"]
+            }),
     })
     .refine(data => {
         if (data.newPassword || data.repeatPassword) {
@@ -40,6 +53,7 @@ const updateInformation = async (req: Request, res: Response) => {
         }
 
         const userId = req.user.id
+
         const { firstName, lastName, password, newPassword } = updateSchema.parse(req.body)
 
         const user = await prisma.user.findUnique({ where: { id: userId } })
@@ -48,7 +62,7 @@ const updateInformation = async (req: Request, res: Response) => {
             return
         }
 
-        // Si quiere cambiar contraseña, verificamos la actual
+        // Si quiere cambiar la contraseña
         if (newPassword) {
             const isValid = await bcrypt.compare(password || '', user.password)
             if (!isValid) {
@@ -66,6 +80,20 @@ const updateInformation = async (req: Request, res: Response) => {
             updateData.password = await bcrypt.hash(newPassword, 10)
         }
 
+        if (req.file) {
+            const uploadsDir = path.join(__dirname, '../../public/uploads/profile')
+
+            if (user.image) {
+                const oldPath = path.join(uploadsDir, user.image)
+                try {
+                    await fs.unlink(oldPath)
+                } catch (err) {
+                    console.warn('Could not delete old profile image:', oldPath, err)
+                }
+            }
+            updateData.image = req.file.filename
+        }
+
         const userUpdated = await prisma.user.update({
             where: { id: userId },
             data: updateData,
@@ -78,7 +106,7 @@ const updateInformation = async (req: Request, res: Response) => {
             return
         }
         console.error(e)
-        res.status(500).send('Internal server error')
+        res.status(500).send('Internal server error '+e)
     }
 }
 

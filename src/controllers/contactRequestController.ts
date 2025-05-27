@@ -28,14 +28,16 @@ async function friends(req: Request, res: Response) {
                     select: {
                         id: true,
                         firstName: true,
-                        lastName: true
+                        lastName: true,
+                        image: true
                     },
                 },
                 receiver: {
                     select: {
                         id: true,
                         firstName: true,
-                        lastName: true
+                        lastName: true,
+                        image: true
                     },
                 },
             },
@@ -141,7 +143,8 @@ async function getReceivedRequests(userId: number) {
                 select: {
                     id: true,
                     firstName: true,
-                    lastName: true
+                    lastName: true,
+                    image: true
                 }
             },
         },
@@ -165,14 +168,16 @@ async function accept(req: Request, res: Response) {
                     select: {
                         id: true,
                         firstName: true,
-                        lastName: true
+                        lastName: true,
+                        image: true
                     }
                 },
                 receiver: {
                     select: {
                         id: true,
                         firstName: true,
-                        lastName: true
+                        lastName: true,
+                        image: true,
                     }
                 }
             }
@@ -191,14 +196,16 @@ async function accept(req: Request, res: Response) {
                     select: {
                         id: true,
                         firstName: true,
-                        lastName: true
+                        lastName: true,
+                        image: true
                     }
                 },
                 receiver: {
                     select: {
                         id: true,
                         firstName: true,
-                        lastName: true
+                        lastName: true,
+                        image: true
                     }
                 }
             }

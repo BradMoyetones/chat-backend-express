@@ -11,6 +11,7 @@ import contactRequestController from '../controllers/contactRequestController'
 import profileController from '../controllers/profileController'
 
 import { authenticateJWT } from '../middlewares/authenticateJWT'
+import { upload } from '../middlewares/upload'
 
 const router = Router()
 
@@ -25,7 +26,13 @@ router.post('/auth/refresh', authController.refreshToken)
 router.get('/auth/me', authenticateJWT, authController.me)
 
 // Profile
-router.post('/profile/update', authenticateJWT, profileController.updateInformation)
+router.post(
+    '/profile/update',
+    authenticateJWT,
+    upload.single('image'),
+    profileController.updateInformation
+)
+
 
 // Users routes (protegidas)
 router.get('/users', authenticateJWT, userController.index)

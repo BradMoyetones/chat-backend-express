@@ -42,6 +42,7 @@ const index = async (req: Request, res: Response) => {
                                 id: true,
                                 firstName: true,
                                 lastName: true,
+                                image: true,
                             }
                         }
                      }
@@ -105,6 +106,7 @@ const find = async (req: Request, res: Response) => {
                             id: true,
                             firstName: true,
                             lastName: true,
+                            image: true
                         }
                     }
                 }},
@@ -116,6 +118,7 @@ const find = async (req: Request, res: Response) => {
                                 id: true,
                                 firstName: true,
                                 lastName: true,
+                                image: true
                             }
                         },
                         reads: {
@@ -192,6 +195,7 @@ const store = async (req: Request, res: Response) => {
                                 id: true,
                                 firstName: true,
                                 lastName: true,
+                                image: true
                             }
                         }
                     }

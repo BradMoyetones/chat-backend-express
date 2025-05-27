@@ -61,6 +61,7 @@ const search = async (req: Request, res: Response) => {
         firstName: true,
         lastName: true,
         email: true,
+        image: true,
         sentRequests: {
           where: { receiverId: userId },
           select: { id: true, status: true },
