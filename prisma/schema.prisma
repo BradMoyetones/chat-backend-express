@@ -22,7 +22,8 @@ model User {
   createdAt  DateTime @default(now())
   isVerified Boolean  @default(false)
 
-  image String?
+  image       String?
+  description String?
 
   messages     Message[]     @relation("SenderMessages")
   participants Participant[]

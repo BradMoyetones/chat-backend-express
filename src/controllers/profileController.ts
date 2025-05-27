@@ -10,6 +10,7 @@ const updateSchema = z
     .object({
         firstName: z.string().min(1, 'First name is required'),
         lastName: z.string().min(1, 'Last name is required'),
+        description: z.string().min(1, 'Description is required').optional(),
         password: z.string().min(6, 'Current password is required').optional(),
         newPassword: z.string().min(6, 'New password must be at least 6 characters').optional(),
         repeatPassword: z.string().min(6, 'Repeat password must be at least 6 characters').optional(),
@@ -54,7 +55,7 @@ const updateInformation = async (req: Request, res: Response) => {
 
         const userId = req.user.id
 
-        const { firstName, lastName, password, newPassword } = updateSchema.parse(req.body)
+        const { firstName, lastName, description, password, newPassword } = updateSchema.parse(req.body)
 
         const user = await prisma.user.findUnique({ where: { id: userId } })
         if (!user) {
@@ -74,6 +75,9 @@ const updateInformation = async (req: Request, res: Response) => {
         const updateData: any = {
             firstName,
             lastName,
+        }
+        if(description){
+            updateData.description = description
         }
 
         if (newPassword) {
@@ -97,6 +101,15 @@ const updateInformation = async (req: Request, res: Response) => {
         const userUpdated = await prisma.user.update({
             where: { id: userId },
             data: updateData,
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                description: true,
+                image: true,
+                email: true,
+                createdAt: true,
+            }
         })
 
         res.status(200).json({ user: userUpdated, message: 'Profile updated successfully' })
