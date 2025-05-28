@@ -57,6 +57,8 @@ npx prisma migrate dev --name init
 npm run dev
 ```
 
+---
+
 ## 🔐 HTTPS Setup with mkcert
 
 To enable HTTPS in your local development environment without certificate errors, follow these steps:
