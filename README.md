@@ -139,17 +139,23 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocola
 
 ### 2. Install mkcert
 
+```bash
 choco install mkcert -y
+```
 
 ### 3. Install the local root certificate
 
+```bash
 mkcert -install
+```
 
 ### 4. Generate a local certificate for your IP
 
 Replace `192.168.x.x` with your local IP address (find it with `ipconfig`):
 
+```bash
 mkcert 192.168.x.x
+```
 
 ### 5. Use the certificates in your Node.js/Express server
 
