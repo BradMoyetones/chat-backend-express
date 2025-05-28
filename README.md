@@ -106,8 +106,6 @@ server.listen(3003, () => {
 })
 ```
 
----
-
 ### ✅ Optional: Use a custom domain like `chat.localdev`
 
 You can generate a certificate for a custom local domain instead of using your IP:
@@ -124,20 +122,90 @@ Then, map the domain to your local IP by editing your /etc/hosts file:
 
 ---
 
+## 🔐 HTTPS Setup with mkcert (Windows)
+
+To enable HTTPS in your local development environment on Windows without certificate errors, follow these steps:
+
+### 1. Install Chocolatey (if not installed)
+
+Open PowerShell as Administrator and run:
+
+Set-ExecutionPolicy Bypass -Scope Process -Force; `
+[System.Net.ServicePointManager]::SecurityProtocol = `
+[System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+### 2. Install mkcert
+
+choco install mkcert -y
+
+### 3. Install the local root certificate
+
+mkcert -install
+
+### 4. Generate a local certificate for your IP
+
+Replace `192.168.x.x` with your local IP address (find it with `ipconfig`):
+
+mkcert 192.168.x.x
+
+### 5. Use the certificates in your Node.js/Express server
+
+Example configuration (same as Mac):
+
+```ts
+import https from 'https'
+import fs from 'fs'
+import app from './app' // Your Express app
+
+const key = fs.readFileSync('./certs/192.168.x.x-key.pem')
+const cert = fs.readFileSync('./certs/192.168.x.x.pem')
+
+const server = https.createServer({ key, cert }, app)
+
+server.listen(3003, () => {
+  console.log('HTTPS server running at https://192.168.x.x:3003')
+})
+```
+
+# ✅ Optional: Use a custom domain like `chat.localdev`
+
+# Generate a certificate for the custom domain:
+
+```bash
+mkcert chat.localdev
+```
+
+# Then add the following line to your hosts file:
+
+(Open C:\Windows\System32\drivers\etc\hosts as Administrator and add this line)
+
+```bash
+echo "192.168.x.x    chat.localdev" | tee -a C:\Windows\System32\drivers\etc\hosts
+```
+
+---
+
 ## 📁 Project Structure
 
 The backend is organized following a modular architecture:
 
 ```bash
 src/
-├── controllers/    # Business logic and request handlers
-├── routes/         # Express route definitions
-├── models/         # (Optional) Custom logic or data abstractions
-├── middlewares/    # Express middlewares
-├── app.ts          # Main application setup and middleware configuration
-└── server.ts       # Server initialization and Socket.IO integration
+├── app.ts                  # Main Express app setup and middleware configuration
+├── server.ts               # Server initialization, HTTPS setup, and Socket.IO integration
+├── controllers/            # Business logic and request handlers (auth, messages, users, etc.)
+├── routes/                 # Express route definitions (API endpoints)
+├── middlewares/            # Express middlewares (auth, file uploads, etc.)
+├── models/                 # (Optional) Data models or domain logic abstractions
+├── mediasoup/              # mediasoup server logic for WebRTC calls (handlers, room management)
+├── socket/                 # Socket.IO event handlers (call handling, messaging events)
+│   └── handlers/           
+│       └── callHandler.ts
+├── lib/                    # Helper utilities (mailer, socket helpers, etc.)
+├── types/                  # Custom TypeScript types and module declarations
+├── utils/                  # Utility functions (JWT, general helpers)
 ```
-
 
 *To export the current file/folder structure (excluding `node_modules`, `.git`, and `dist`), you can use the `tree` command:*
 
