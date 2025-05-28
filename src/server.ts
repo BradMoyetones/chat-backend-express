@@ -3,8 +3,16 @@ import { Server as SocketIOServer, Socket } from 'socket.io'
 import app from './app'
 import { getUserConversations } from './lib/socketHelpers'
 import { registerCallHandlers } from './socket/handlers/callHandler'
+import { initMediasoup } from './mediasoup/server'
+import https from 'https'
+import fs from 'fs'
+import path from 'path'
 
-const server = http.createServer(app)
+const key = fs.readFileSync(path.resolve(__dirname, '../certs/192.168.68.103-key.pem'))
+const cert = fs.readFileSync(path.resolve(__dirname, '../certs/192.168.68.103.pem'))
+
+// const server = http.createServer(app)
+const server = https.createServer({ key, cert }, app)
 process.env.TZ = 'America/Bogota'
 
 export const io = new SocketIOServer(server, {
@@ -77,11 +85,9 @@ io.on('connection', async (socket: Socket) => {
         socket.to(`conversation:${conversationId}`).emit('stopTyping', { conversationId, userId });
     });
 
-
     // Llamadas
     registerCallHandlers(socket)
-
-
+    await initMediasoup()
 
     // Cuando se desconecta automáticamente (ej. se cierra la pestaña)
     socket.on('disconnect', () => {

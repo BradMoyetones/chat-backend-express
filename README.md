@@ -57,6 +57,67 @@ npx prisma migrate dev --name init
 npm run dev
 ```
 
+## 🔐 HTTPS Setup with mkcert
+
+To enable HTTPS in your local development environment without certificate errors, follow these steps:
+
+### 1. Install `mkcert`
+
+```bash
+brew install mkcert
+```
+
+### 2. Install the local root certificate
+
+This step sets up a local Certificate Authority (CA) trusted by your system:
+
+```bash
+mkcert -install
+```
+
+### 3. Generate a local certificate for your IP
+
+Replace `192.168.x.x` with your local IP address (you can find it using `ifconfig` or `ipconfig`):
+
+```bash
+mkcert 192.168.x.x
+```
+
+### 4. Use the certificates in your Node.js/Express server
+
+Example configuration:
+
+```ts
+import https from 'https'
+import fs from 'fs'
+import app from './app' // Your Express app
+
+const key = fs.readFileSync('./certs/192.168.x.x-key.pem')
+const cert = fs.readFileSync('./certs/192.168.x.x.pem')
+
+const server = https.createServer({ key, cert }, app)
+
+server.listen(3003, () => {
+  console.log('HTTPS server running at https://192.168.x.x:3003')
+})
+```
+
+---
+
+### ✅ Optional: Use a custom domain like `chat.localdev`
+
+You can generate a certificate for a custom local domain instead of using your IP:
+
+```bash
+mkcert chat.localdev
+```
+
+Then, map the domain to your local IP by editing your /etc/hosts file:
+
+```bash
+192.168.x.x    chat.localdev
+```
+
 ---
 
 ## 📁 Project Structure

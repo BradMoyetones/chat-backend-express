@@ -2,8 +2,10 @@
 import { Socket } from "socket.io"
 import { onlineUsers } from "../../server"
 import { emitToUser } from "../../lib/socketHelpers"
+import { registerMediasoupHandlers } from "../../mediasoup/handlers"
 
 export function registerCallHandlers(socket: Socket) {
+
 
     socket.on('call:user', ({ targetUserId, from }) => {
         emitToUser(targetUserId, 'call:incoming', { from })
@@ -20,16 +22,6 @@ export function registerCallHandlers(socket: Socket) {
     socket.on('call:end', ({ targetUserId }) => {
         emitToUser(targetUserId, 'call:ended', { from: socket.data.userId })
     })
+    registerMediasoupHandlers(socket)
 
-    socket.on('webrtc:offer', ({ targetUserId, offer }) => {
-        emitToUser(targetUserId, 'webrtc:offer', { from: socket.data.userId, offer })
-    })
-
-    socket.on('webrtc:answer', ({ targetUserId, answer }) => {
-        emitToUser(targetUserId, 'webrtc:answer', { from: socket.data.userId, answer })
-    })
-
-    socket.on('webrtc:ice-candidate', ({ targetUserId, candidate }) => {
-        emitToUser(targetUserId, 'webrtc:ice-candidate', { from: socket.data.userId, candidate })
-    })
 }
