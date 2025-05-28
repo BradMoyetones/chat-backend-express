@@ -2,6 +2,7 @@ import http from 'http'
 import { Server as SocketIOServer, Socket } from 'socket.io'
 import app from './app'
 import { getUserConversations } from './lib/socketHelpers'
+import { registerCallHandlers } from './socket/handlers/callHandler'
 
 const server = http.createServer(app)
 process.env.TZ = 'America/Bogota'
@@ -77,77 +78,8 @@ io.on('connection', async (socket: Socket) => {
     });
 
 
-
-    // Llamar a un usuario
-    socket.on('call:user', ({ targetUserId, from }) => {
-        const targetSocketId = onlineUsers.get(targetUserId)
-        if (targetSocketId) {
-            socket.to(targetSocketId).emit('call:incoming', { from })
-        }
-    })
-
-    // Aceptar llamada
-    socket.on('call:accept', ({ to }) => {
-        const toSocketId = onlineUsers.get(to)
-        if (toSocketId) {
-            socket.to(toSocketId).emit('call:accepted', {
-                from: socket.data.userId
-            })
-        }
-    })
-
-    // Rechazar llamada
-    socket.on('call:reject', ({ to }) => {
-        const toSocketId = onlineUsers.get(to)
-        if (toSocketId) {
-            socket.to(toSocketId).emit('call:rejected')
-        }
-    })
-
-    // Finalizar llamada
-    socket.on('call:end', ({ targetUserId }) => {
-        const targetSocketId = onlineUsers.get(targetUserId)
-        if (targetSocketId) {
-            socket.to(targetSocketId).emit('call:ended', {
-                from: socket.data.userId
-            })
-        }
-    })
-
-    
-
-    // Enviar offer del caller al callee
-    socket.on('webrtc:offer', ({ targetUserId, offer }) => {
-        const targetSocketId = onlineUsers.get(targetUserId)
-        if (targetSocketId) {
-            socket.to(targetSocketId).emit('webrtc:offer', {
-                from: socket.data.userId,
-                offer
-            })
-        }
-    })
-
-    // Enviar answer del callee al caller
-    socket.on('webrtc:answer', ({ targetUserId, answer }) => {
-        const targetSocketId = onlineUsers.get(targetUserId)
-        if (targetSocketId) {
-            socket.to(targetSocketId).emit('webrtc:answer', {
-                from: socket.data.userId,
-                answer
-            })
-        }
-    })
-
-    // Enviar ICE candidates
-    socket.on('webrtc:ice-candidate', ({ targetUserId, candidate }) => {
-        const targetSocketId = onlineUsers.get(targetUserId)
-        if (targetSocketId) {
-            socket.to(targetSocketId).emit('webrtc:ice-candidate', {
-                from: socket.data.userId,
-                candidate
-            })
-        }
-    })
+    // Llamadas
+    registerCallHandlers(socket)
 
 
 
