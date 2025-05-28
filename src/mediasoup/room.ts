@@ -1,5 +1,5 @@
 // mediasoup/room.ts
-import { WebRtcTransport, Router } from 'mediasoup/node/lib/types'
+import { WebRtcTransport } from 'mediasoup/node/lib/types'
 import { getMediasoupRouter } from './server'
 
 interface Peer {
@@ -20,7 +20,7 @@ export function getRoomIdOfUser(userId: number): string | undefined {
 export async function createWebRtcTransport(userId: number, roomId: string) {
     const router = getMediasoupRouter()
     const transport = await router.createWebRtcTransport({
-        listenIps: [{ ip: '127.0.0.1' }],
+        listenIps: [{ ip: '127.0.0.1' }], // -> In prod change for your server ip
         enableUdp: true,
         enableTcp: true,
         preferUdp: true,
