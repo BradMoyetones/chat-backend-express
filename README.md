@@ -2,19 +2,21 @@
 
 ---
 
-This is the backend of a real-time chat application built with modern technologies such as **Express.js**, **TypeScript**, **Socket.IO**, and **Prisma ORM**. It serves both as a RESTful API and a real-time WebSocket server for chat functionalities.
+This is the backend of a real-time chat application built with modern technologies such as **Express.js**, **TypeScript**, **Socket.IO**, **mediasoup**, and **Prisma ORM**. It serves both as a RESTful API and a real-time WebSocket server for chat functionalities, including advanced WebRTC media handling via mediasoup.
 
 ## 🚀 Tech Stack
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![Socket.IO](https://img.shields.io/badge/Socket.IO-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io/)
+[![mediasoup](https://img.shields.io/badge/mediasoup-4A90E2?style=for-the-badge&logo=webrtc&logoColor=white)](https://mediasoup.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![MySQL](https://img.shields.io/badge/MySQL-00758F?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
 
 - **TypeScript** – Strongly typed JavaScript for safer, scalable code.
 - **Express.js** – Fast, minimalist web framework for building APIs.
 - **Socket.IO** – Real-time bi-directional communication layer for chat.
+- **mediasoup** – Advanced WebRTC media server for handling audio/video calls.
 - **Prisma ORM** – Modern ORM to interact with MySQL database.
 - **MySQL (XAMPP)** – Relational database used for persistent storage.
 
@@ -26,8 +28,8 @@ To get this project up and running on your local machine, follow these steps:
 
 1.  **Clone the repository:**
 ```bash
-git clone [https://github.com/your-username/your-chat-backend.git](https://github.com/your-username/your-chat-backend.git)
-cd your-chat-backend
+git clone https://github.com/BradMoyetones/chat-backend-express.git
+cd chat-backend-express
 ```
 
 2.  **Install dependencies:**
@@ -157,9 +159,10 @@ tree -a -I 'node_modules|.git|dist' > structure.txt
 ## 📌 Notes
 
 - Make sure **MySQL** is running via **XAMPP** or any other MySQL server.
-- You can use **Prisma Studio** to visualize and edit data in your DB.
+- You can use **Prisma Studio** to visualize and edit data in your database.
 - Prisma schema is located in `prisma/schema.prisma`.
 - **Socket.IO** is initialized in `server.ts` and ready to handle real-time events like message sending and receiving.
+- **mediasoup** is integrated for handling real-time WebRTC audio/video calls in the backend.
 
 ## 👨‍💻 Author
 
