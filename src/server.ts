@@ -8,11 +8,11 @@ import https from 'https'
 import fs from 'fs'
 import path from 'path'
 
-const key = fs.readFileSync(path.resolve(__dirname, '../certs/192.168.68.103-key.pem'))
-const cert = fs.readFileSync(path.resolve(__dirname, '../certs/192.168.68.103.pem'))
+// const key = fs.readFileSync(path.resolve(__dirname, '../certs/192.168.68.103-key.pem'))
+// const cert = fs.readFileSync(path.resolve(__dirname, '../certs/192.168.68.103.pem'))
 
-// const server = http.createServer(app)
-const server = https.createServer({ key, cert }, app)
+const server = http.createServer(app)
+// const server = https.createServer({ key, cert }, app)
 process.env.TZ = 'America/Bogota'
 
 export const io = new SocketIOServer(server, {
