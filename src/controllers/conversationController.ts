@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express'
 import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
 import { emitToUser } from '../lib/socketHelpers'
+import path from 'path'
+import fs from 'fs'
 
 const prisma = new PrismaClient()
 
@@ -49,7 +51,10 @@ const index = async (req: Request, res: Response) => {
                 },
                 messages: {
                     orderBy: { createdAt: 'desc' },
-                    take: 1
+                    take: 1,
+                    include: {
+                        attachments: true
+                    }
                 }
             }
         })
@@ -127,6 +132,7 @@ const find = async (req: Request, res: Response) => {
                                 readAt: true,
                             }
                         },
+                        attachments: true
                     }
                 }
             }
@@ -331,12 +337,68 @@ const destroy = async (req: Request, res: Response) => {
     }
 }
 
+const attachments = async (req: Request, res: Response) => {
+    if (!req.user || typeof req.user === 'string') {
+        res.status(401).json({ error: 'Unauthorized' })
+        return
+    }
 
+    const { filename } = req.params
+    const userId = req.user.id
+
+    try {
+        // Buscar el attachment por nombre de archivo
+        const attachment = await prisma.attachment.findFirst({
+            where: { filename },
+            include: {
+                message: {
+                    include: {
+                        conversation: {
+                            include: {
+                                participants: true,
+                            }
+                        }
+                    }
+                }
+            }
+        })
+
+        if (!attachment) {
+            res.status(404).json({ error: 'File not found' })
+            return
+        }
+
+        // Validar que el usuario participa en la conversación
+        const isParticipant = attachment.message.conversation.participants.some(
+            (p) => p.userId === userId
+        )
+
+        if (!isParticipant) {
+            res.status(403).json({ error: 'Access denied' })
+            return
+        }
+
+        const conversationId = attachment.message.conversationId
+        const filePath = path.join(__dirname, `../../private/uploads/conversations/conversation-${conversationId}`, filename)
+
+        // Validar que el archivo realmente exista en disco
+        if (!fs.existsSync(filePath)) {
+            res.status(404).json({ error: 'File not found on server' })
+            return
+        }
+
+        res.sendFile(filePath)
+    } catch (error) {
+        console.error('Error serving file:', error)
+        res.status(500).json({ error: 'Internal server error' })
+    }
+}
 
 export default {
     index,
     find,
     store,
     update,
-    destroy
+    destroy,
+    attachments
 }

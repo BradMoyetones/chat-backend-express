@@ -15,7 +15,6 @@ const messageIdParamSchema = z.object({
 })
 
 const messageCreateSchema = z.object({
-  senderId: z.number().int().positive(),
   content: z.string().optional().nullable()
 })
 
@@ -61,7 +60,6 @@ const store = async (req: Request, res: Response) => {
         const { conversationId } = conversationParamSchema.parse(req.params)
         const data = messageCreateSchema.parse(req.body)
 
-        // Validar que el usuario es participante de la conversación
         const conversation = await prisma.conversation.findUnique({
             where: { id: conversationId },
             include: {
@@ -83,27 +81,49 @@ const store = async (req: Request, res: Response) => {
         const message = await prisma.message.create({
             data: {
                 content: data.content,
-                senderId: data.senderId,
+                senderId: userId,
                 conversationId,
             },
+        })
+
+        // Adjuntar archivos si existen
+        if (req.files && Array.isArray(req.files)) {
+            const attachments = req.files.map(file => ({
+                filename: file.filename,
+                originalName: file.originalname, // <--- aquí
+                type: file.mimetype,
+                size: file.size,
+                messageId: message.id,
+                userId,
+            }))
+
+            await prisma.attachment.createMany({
+                data: attachments,
+            })
+        }
+
+        const fullMessage = await prisma.message.findUnique({
+            where: { id: message.id },
             include: {
                 sender: {
                     select: {
                         id: true,
                         firstName: true,
                         lastName: true,
-                        image: true
+                        image: true,
                     },
                 },
                 reads: true,
+                attachments: true,
             },
         })
 
+        // Emitir mensaje a los participantes
         for (const participant of conversation.participants) {
-            emitToUser(participant.userId, 'mensaje:recibido', message)
+            emitToUser(participant.userId, 'mensaje:recibido', fullMessage)
         }
 
-        res.status(201).json(message)
+        res.status(201).json(fullMessage)
     } catch (e) {
         if (e instanceof z.ZodError) {
             res.status(400).json({ error: e.errors })

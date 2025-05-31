@@ -1,5 +1,6 @@
 import express, { Application } from 'express'
 import apiRoutes from './routes/api'
+import attachmentRoutes from './routes/attachments'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import path from 'path'
@@ -17,5 +18,6 @@ app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')))
 
 // Rutas
 app.use('/api', apiRoutes)
+app.use('/api/attachments', attachmentRoutes)
 
 export default app

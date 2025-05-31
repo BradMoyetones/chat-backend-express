@@ -12,6 +12,7 @@ import profileController from '../controllers/profileController'
 
 import { authenticateJWT } from '../middlewares/authenticateJWT'
 import { upload } from '../middlewares/upload'
+import uploadFiles from '../middlewares/uploadFiles'
 
 const router = Router()
 
@@ -57,7 +58,12 @@ router.delete('/participants/:id', authenticateJWT, participantController.destro
 
 // Messages
 router.get('/conversations/:conversationId/messages', authenticateJWT, messageController.index)
-router.post('/conversations/:conversationId/messages', authenticateJWT, messageController.store)
+router.post(
+    '/conversations/:conversationId/messages',
+    authenticateJWT,
+    uploadFiles,
+    messageController.store
+)
 
 // Mensajes individuales
 router.patch('/messages/:id', authenticateJWT, messageController.update)

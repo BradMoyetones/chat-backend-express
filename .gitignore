@@ -31,3 +31,6 @@ Thumbs.db
 structure.txt
 
 certs/
+
+private/
+public/uploads/profile/
