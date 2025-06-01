@@ -97,11 +97,12 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
 
             res.cookie('verify_email_token', token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
+                secure: true,            // Requiere HTTPS en producción
+                sameSite: 'none',        // Requiere secure=true o no funcionará
                 path: '/',
                 maxAge: expiresMs,
-                sameSite: 'lax',
-            })
+            });
+
 
             res.status(401).json({
                 message: 'Please verify your email to continue.',
