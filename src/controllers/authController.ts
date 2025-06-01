@@ -100,7 +100,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
                 secure: process.env.NODE_ENV === 'production',
                 path: '/',
                 maxAge: expiresMs,
-                sameSite: 'lax',
+                sameSite: 'none',
             })
 
             res.status(401).json({
@@ -187,7 +187,7 @@ const register = async (req: Request, res: Response) => {
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_VERIFY_EMAIL_EXPIRES as StringValue || '10m'),
-            sameSite: 'lax',
+            sameSite: 'none',
         })
 
         res.status(201).json({ message: 'Registration successful. Please check your email to verify your account.' })
@@ -340,7 +340,7 @@ const resendVerification = async (req: Request, res: Response) => {
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: expiresMs,
-            sameSite: 'lax',
+            sameSite: 'none',
         })
 
         res.status(200).json({ message: 'Verification code resent. Please check your email.' })
