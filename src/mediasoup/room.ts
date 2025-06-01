@@ -20,7 +20,12 @@ export function getRoomIdOfUser(userId: number): string | undefined {
 export async function createWebRtcTransport(userId: number, roomId: string) {
     const router = getMediasoupRouter()
     const transport = await router.createWebRtcTransport({
-        listenIps: [{ ip: '127.0.0.1' }], // -> In prod change for your server ip
+        listenIps: [
+            {
+                ip: '0.0.0.0', // Acepta conexiones desde cualquier IP
+                announcedIp: process.env.ANNOUNCED_IP, // Importante: IP pública para WebRTC
+            },
+        ], // -> In prod change for your server ip
         enableUdp: true,
         enableTcp: true,
         preferUdp: true,
