@@ -97,12 +97,11 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
 
             res.cookie('verify_email_token', token, {
                 httpOnly: true,
-                secure: true,            // Requiere HTTPS en producción
-                sameSite: 'none',        // Requiere secure=true o no funcionará
+                secure: process.env.NODE_ENV === 'production',
                 path: '/',
                 maxAge: expiresMs,
-            });
-
+                sameSite: 'lax',
+            })
 
             res.status(401).json({
                 message: 'Please verify your email to continue.',
@@ -188,7 +187,7 @@ const register = async (req: Request, res: Response) => {
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_VERIFY_EMAIL_EXPIRES as StringValue || '10m'),
-            sameSite: 'none',
+            sameSite: 'lax',
         })
 
         res.status(201).json({ message: 'Registration successful. Please check your email to verify your account.' })
@@ -341,7 +340,7 @@ const resendVerification = async (req: Request, res: Response) => {
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: expiresMs,
-            sameSite: 'none',
+            sameSite: 'lax',
         })
 
         res.status(200).json({ message: 'Verification code resent. Please check your email.' })
