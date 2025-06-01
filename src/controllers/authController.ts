@@ -100,7 +100,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
                 secure: process.env.NODE_ENV === 'production',
                 path: '/',
                 maxAge: expiresMs,
-                sameSite: 'none',
+                sameSite: 'lax',
             })
 
             res.status(401).json({
