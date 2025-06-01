@@ -2,6 +2,7 @@
 import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
+import { Request, Response, NextFunction } from 'express'
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -18,9 +19,20 @@ const storage = multer.diskStorage({
     },
 })
 
-const uploadFiles = multer({
+const upload = multer({
     storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB por archivo
-}).array('attachments', 10) // ACEPTA hasta 10 archivos bajo el campo 'attachments'
+    limits: { fileSize: 100 * 1024 * 1024 }, // 100MB por archivo
+}).array('attachments', 10)
+
+const uploadFiles = (req: Request, res: Response, next: NextFunction) => {
+    upload(req, res, (err) => {
+        if (err instanceof multer.MulterError) {
+            return res.status(400).json({ error: err.message })
+        } else if (err) {
+            return res.status(500).json({ error: 'Unexpected error while uploading files' })
+        }
+        next()
+    })
+}
 
 export default uploadFiles

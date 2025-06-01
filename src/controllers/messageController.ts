@@ -88,14 +88,20 @@ const store = async (req: Request, res: Response) => {
 
         // Adjuntar archivos si existen
         if (req.files && Array.isArray(req.files)) {
-            const attachments = req.files.map(file => ({
-                filename: file.filename,
-                originalName: file.originalname, // <--- aquí
-                type: file.mimetype,
-                size: file.size,
-                messageId: message.id,
-                userId,
-            }))
+            const attachments = req.files.map(file => {
+                const buffer = Buffer.from(file.originalname, 'latin1')
+                const correctedName = buffer.toString('utf8')
+
+                return {
+                    filename: file.filename,
+                    originalName: correctedName,
+                    type: file.mimetype,
+                    size: file.size,
+                    messageId: message.id,
+                    userId,
+                }
+            })
+
 
             await prisma.attachment.createMany({
                 data: attachments,
