@@ -17,7 +17,7 @@ process.env.TZ = 'America/Bogota'
 
 export const io = new SocketIOServer(server, {
     cors: {
-        origin: '*',
+        origin: 'https://chat-app-brad.vercel.app',
         methods: ['GET', 'POST'],
     },
 })
