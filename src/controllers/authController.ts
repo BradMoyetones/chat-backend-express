@@ -96,11 +96,11 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
             const token = signVerifyEmailToken({ userId: user.id })
 
             res.cookie('verify_email_token', token, {
-                httpOnly: false,
-                secure: false,
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
                 path: '/',
                 maxAge: expiresMs,
-                sameSite: 'none',
+                sameSite: 'none',  // <-- Cambiar aquí
             })
 
             res.status(401).json({
@@ -122,6 +122,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_ACCESS_EXPIRES as StringValue || '1d'),
+            sameSite: 'none'
         })
 
         res.cookie('refreshToken', refreshToken, {
@@ -129,6 +130,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_REFRESH_EXPIRES as StringValue || '7d'),
+            sameSite: 'none'
         })
 
         res.status(200).json({
