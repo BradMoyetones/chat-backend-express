@@ -96,7 +96,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
             const token = signVerifyEmailToken({ userId: user.id })
 
             res.cookie('verify_email_token', token, {
-                httpOnly: true,
+                httpOnly: false,
                 secure: process.env.NODE_ENV === 'production',
                 path: '/',
                 maxAge: expiresMs,
