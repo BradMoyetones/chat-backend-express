@@ -100,7 +100,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
                 secure: process.env.NODE_ENV === 'production',
                 path: '/',
                 maxAge: expiresMs,
-                  // <-- Cambiar aquí
+                sameSite: 'none',  // <-- Cambiar aquí
             })
 
             res.status(401).json({
@@ -122,7 +122,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_ACCESS_EXPIRES as StringValue || '1d'),
-            
+            sameSite: 'none'
         })
 
         res.cookie('refreshToken', refreshToken, {
@@ -130,7 +130,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_REFRESH_EXPIRES as StringValue || '7d'),
-            
+            sameSite: 'none'
         })
 
         res.status(200).json({
@@ -189,7 +189,7 @@ const register = async (req: Request, res: Response) => {
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_VERIFY_EMAIL_EXPIRES as StringValue || '10m'),
-            
+            sameSite: 'none'
         })
 
         res.status(201).json({ message: 'Registration successful. Please check your email to verify your account.' })
@@ -258,7 +258,7 @@ const verifyEmail = async (req: Request, res: Response) => {
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_ACCESS_EXPIRES as StringValue || '1d'),
-            
+            sameSite: 'none'
         })
 
         res.cookie('refreshToken', refreshToken, {
@@ -266,7 +266,7 @@ const verifyEmail = async (req: Request, res: Response) => {
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_REFRESH_EXPIRES as StringValue || '7d'),
-            
+            sameSite: 'none'
         })
 
         res.status(200).json({ message: 'Email verificado exitosamente' })
@@ -344,7 +344,7 @@ const resendVerification = async (req: Request, res: Response) => {
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: expiresMs,
-            
+            sameSite: 'none'
         })
 
         res.status(200).json({ message: 'Verification code resent. Please check your email.' })
@@ -394,7 +394,7 @@ const refreshToken = (req: Request, res: Response) => {
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_ACCESS_EXPIRES as StringValue || '1d'), // 1 dia
-            
+            sameSite: 'none'
         })
 
         res.status(200).json({ ok: true })
