@@ -96,7 +96,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
             const token = signVerifyEmailToken({ userId: user.id })
 
             res.cookie('verify_email_token', token, {
-                httpOnly: false,
+                httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 path: '/',
                 maxAge: expiresMs,
@@ -118,7 +118,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
 
         // Seteamos cookies con las opciones recomendadas
         res.cookie('accessToken', accessToken, {
-            httpOnly: false,
+            httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_ACCESS_EXPIRES as StringValue || '1d'),
@@ -126,7 +126,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
         })
 
         res.cookie('refreshToken', refreshToken, {
-            httpOnly: false,
+            httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_REFRESH_EXPIRES as StringValue || '7d'),
@@ -185,7 +185,7 @@ const register = async (req: Request, res: Response) => {
         const token = signVerifyEmailToken({ userId: user.id })
 
         res.cookie('verify_email_token', token, {
-            httpOnly: false,
+            httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_VERIFY_EMAIL_EXPIRES as StringValue || '10m'),
@@ -254,7 +254,7 @@ const verifyEmail = async (req: Request, res: Response) => {
         const refreshToken = signRefreshToken({ id: userId })
 
         res.cookie('accessToken', accessToken, {
-            httpOnly: false,
+            httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_ACCESS_EXPIRES as StringValue || '1d'),
@@ -262,7 +262,7 @@ const verifyEmail = async (req: Request, res: Response) => {
         })
 
         res.cookie('refreshToken', refreshToken, {
-            httpOnly: false,
+            httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_REFRESH_EXPIRES as StringValue || '7d'),
@@ -340,7 +340,7 @@ const resendVerification = async (req: Request, res: Response) => {
         const newToken = signVerifyEmailToken({ userId: user.id })
 
         res.cookie('verify_email_token', newToken, {
-            httpOnly: false,
+            httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: expiresMs,
@@ -357,13 +357,13 @@ const resendVerification = async (req: Request, res: Response) => {
 const logout = async (req: Request, res: Response) => {
     try {
         res.clearCookie('accessToken', {
-            httpOnly: false,
+            httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             path: '/',
         })
 
         res.clearCookie('refreshToken', {
-            httpOnly: false,
+            httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             path: '/',
         })
@@ -390,7 +390,7 @@ const refreshToken = (req: Request, res: Response) => {
         const newAccessToken = signAccessToken({ id: (payload as any).id })
 
         res.cookie('accessToken', newAccessToken, {
-            httpOnly: false,
+            httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             path: '/',
             maxAge: ms(process.env.JWT_ACCESS_EXPIRES as StringValue || '1d'), // 1 dia
