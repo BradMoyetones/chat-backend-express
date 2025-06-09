@@ -9,7 +9,7 @@ const app: Application = express()
 
 app.use(cookieParser())
 app.use(cors({
-    origin: "https://chat-app-brad.vercel.app",
+    origin: true,
     credentials: true,
 }))
 
