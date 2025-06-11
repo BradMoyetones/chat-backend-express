@@ -46,15 +46,12 @@ const search = async (req: Request, res: Response) => {
 
     const { q } = schema.parse(req.query)
 
+    const normalizedQuery = String(q).toLowerCase()
+
     // Buscar usuarios por nombre, apellido o email
-    const results = await prisma.user.findMany({
+    const allUsers = await prisma.user.findMany({
       where: {
         id: { not: userId },
-        OR: [
-          { firstName: { contains: q} },
-          { lastName: { contains: q} },
-          { email: { contains: q} },
-        ],
       },
       select: {
         id: true,
@@ -74,7 +71,16 @@ const search = async (req: Request, res: Response) => {
       take: 20,
     })
 
+    const results = allUsers.filter((user) => {
+      const name = `${user.firstName} ${user.lastName}`.toLowerCase()
+      const email = user.email.toLowerCase()
 
+      return (
+        name.includes(normalizedQuery) ||
+        email.includes(normalizedQuery)
+      )
+    })
+    
     res.status(200).json(results)
   } catch (e) {
     if (e instanceof z.ZodError) {
