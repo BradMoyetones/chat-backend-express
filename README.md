@@ -1,6 +1,4 @@
-# Chat Backend – Express + TypeScript + Prisma + Socket.IO
-
----
+# Chat Backend – Express + TypeScript + Prisma + Socket.IO + mediasoup
 
 This is the backend of a real-time chat application built with modern technologies such as **Express.js**, **TypeScript**, **Socket.IO**, **mediasoup**, and **Prisma ORM**. It serves both as a RESTful API and a real-time WebSocket server for chat functionalities, including advanced WebRTC media handling via mediasoup.
 
@@ -19,8 +17,6 @@ This is the backend of a real-time chat application built with modern technologi
 - **mediasoup** – Advanced WebRTC media server for handling audio/video calls.
 - **Prisma ORM** – Modern ORM to interact with MySQL database.
 - **MySQL (XAMPP)** – Relational database used for persistent storage.
-
----
 
 ## 📦 Installation
 
